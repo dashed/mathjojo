@@ -50,7 +50,7 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
       get: (searchParams, prop: string) => searchParams.get(prop),
     }) as any;
     if (params.v) {
-      console.log("params.v", params.v);
+      // console.log("params.v", params.v);
       let value = decompressString(params.v, DEFAULT_VALUE);
       if (value.trim() === "" && params.v !== "Q") {
         value = DEFAULT_VALUE;
@@ -58,43 +58,8 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
       this.state = {
         value,
       };
-      console.log("this.state", this.state);
+      // console.log("this.state", this.state);
     }
-  }
-
-  componentDidMount() {
-    const { value } = this.state;
-    this.renderLatex(value);
-  }
-
-  componentDidUpdate(prevProps: SandboxProps, prevState: SandboxState) {
-    const { value } = this.state;
-
-    if (prevState.value !== value) {
-      this.renderLatex(value);
-    }
-  }
-
-  renderLatex(value: string) {
-    if ("URLSearchParams" in window) {
-      const compressedValue = compressString(value);
-      const searchParams = new URLSearchParams(window.location.search);
-      searchParams.set("v", compressedValue);
-      const newRelativePathQuery =
-        window.location.pathname + "?" + searchParams.toString();
-      window.history.pushState(null, "", newRelativePathQuery);
-    }
-
-    const node = this.previewRef?.current;
-    if (!node) {
-      console.log("no node");
-      return;
-    }
-
-    katex.render(value, node, {
-      throwOnError: false,
-      displayMode: true,
-    });
   }
 
   render() {
@@ -121,8 +86,20 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
         <br />
         <p>
           <Katex
-            source={this.state.value}
+            source={value}
             katexOptions={{ displayMode: true }}
+            beforeRender={() => {
+              if ("URLSearchParams" in window) {
+                const compressedValue = compressString(value);
+                const searchParams = new URLSearchParams(
+                  window.location.search
+                );
+                searchParams.set("v", compressedValue);
+                const newRelativePathQuery =
+                  window.location.pathname + "?" + searchParams.toString();
+                window.history.pushState(null, "", newRelativePathQuery);
+              }
+            }}
           />
         </p>
       </div>
@@ -150,6 +127,7 @@ const TextArea = styled.textarea`
 type KatexProps = {
   source: string;
   katexOptions?: KatexOptions;
+  beforeRender?: () => void;
 };
 
 class Katex extends React.Component<KatexProps> {
@@ -164,10 +142,22 @@ class Katex extends React.Component<KatexProps> {
     this.renderKatex(source);
   }
 
+  componentDidUpdate(prevProps: KatexProps) {
+    const { source } = this.props;
+    if (prevProps.source !== source) {
+      this.renderKatex(source);
+    }
+  }
+
   renderKatex(value: string) {
     const node = this.previewRef?.current;
     if (!node) {
       return;
+    }
+
+    const { beforeRender } = this.props;
+    if (beforeRender) {
+      beforeRender();
     }
 
     katex.render(value, node, {

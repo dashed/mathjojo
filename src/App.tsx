@@ -36,15 +36,26 @@ type SandboxProps = {
 
 class Sandbox extends React.Component<SandboxProps> {
   previewRef: null | React.RefObject<HTMLParagraphElement> = null;
+  _isMounted: boolean = false;
+  timeoutID: NodeJS.Timeout | undefined = undefined;
 
   constructor(props: SandboxProps) {
     super(props);
     this.previewRef = React.createRef<HTMLParagraphElement>();
+    this._isMounted = false;
   }
 
   componentDidMount() {
     const { value } = this.props;
+    this._isMounted = true;
     this.updateMathJax(value);
+  }
+
+  componentWillUnmount(): void {
+    this._isMounted = false;
+    if (this.timeoutID !== undefined) {
+      clearTimeout(this.timeoutID);
+    }
   }
 
   componentDidUpdate(prevProps: SandboxProps) {
@@ -57,14 +68,34 @@ class Sandbox extends React.Component<SandboxProps> {
 
   updateMathJax(value: string) {
     const node = this.previewRef?.current;
-    if (!node || !window.MathJax) {
+    if (!this._isMounted || !node) {
+      return;
+    }
+    if (
+      !(
+        window.MathJax &&
+        window.MathJax.texReset &&
+        window.MathJax.typesetClear &&
+        window.MathJax.typesetPromise
+      )
+    ) {
+      if (this.timeoutID !== undefined) {
+        // Try again in a second
+        this.timeoutID = setTimeout(() => {
+          console.log("trying again");
+          this.timeoutID = undefined;
+          this.updateMathJax(value);
+        }, 1000);
+      }
+
       return;
     }
 
     try {
       // This seems to error on pageload.
       window.MathJax.startup.document.state(0);
-    } catch (_e) {
+    } catch (err) {
+      console.error(err);
       // pass
     }
 

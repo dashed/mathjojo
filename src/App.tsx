@@ -93,7 +93,7 @@ class Sandbox extends React.Component<SandboxProps> {
           console.log("trying again");
           this.timeoutID = undefined;
           this.updateMathJax(value);
-        }, 1000);
+        }, 200);
       } else {
         console.log("already have timeout");
         clearTimeout(this.timeoutID);
@@ -101,7 +101,7 @@ class Sandbox extends React.Component<SandboxProps> {
           console.log("trying again");
           this.timeoutID = undefined;
           this.updateMathJax(value);
-        }, 1000);
+        }, 200);
       }
 
       return;

@@ -54,7 +54,7 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
     if (params.v) {
       console.log("params.v", params.v);
       let value = decompressString(params.v, DEFAULT_VALUE);
-      if (params.v !== "Q") {
+      if (value.trim() === "" && params.v !== "Q") {
         value = DEFAULT_VALUE;
       }
       this.state = {

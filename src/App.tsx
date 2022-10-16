@@ -36,15 +36,15 @@ type SandboxState = {
 };
 
 class Sandbox extends React.Component<SandboxProps, SandboxState> {
-  previewRef: null | React.RefObject<HTMLParagraphElement> = null;
-
+  textAreaRef: null | React.RefObject<HTMLTextAreaElement> = null;
   state = {
     value: DEFAULT_VALUE,
   };
 
   constructor(props: SandboxProps) {
     super(props);
-    this.previewRef = React.createRef<HTMLParagraphElement>();
+
+    this.textAreaRef = React.createRef<HTMLTextAreaElement>();
 
     const params = new Proxy(new URLSearchParams(window.location.search), {
       get: (searchParams, prop: string) => searchParams.get(prop),
@@ -68,10 +68,19 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
         <p>
           <b>Greek Letters</b>
           <br />
-          <Katex source="\alpha" /> <Katex source="\beta" />
+          <a
+            href="#insert"
+            onClick={(event) => {
+              event.preventDefault();
+            }}
+          >
+            <Katex source="\alpha" />
+          </a>{" "}
+          <Katex source="\beta" />
         </p>
         <br />
         <TextArea
+          ref={this.textAreaRef}
           rows={10}
           value={value}
           onChange={(event) => {

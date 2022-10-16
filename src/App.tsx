@@ -15,6 +15,8 @@ declare global {
   }
 }
 
+const DEFAULT_VALUE = "\\zeta(s) = \\sum_{n=1}^\\infty \\frac{1}{n^s}";
+
 function App() {
   return (
     <div>
@@ -37,7 +39,7 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
   timeoutID: NodeJS.Timeout | undefined = undefined;
 
   state = {
-    value: "\\zeta(s) = \\sum_{n=1}^\\infty \\frac{1}{n^s}",
+    value: DEFAULT_VALUE,
   };
 
   constructor(props: SandboxProps) {
@@ -51,8 +53,12 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
     }) as any;
     if (params.v) {
       console.log("params.v", params.v);
+      let value = decompressString(params.v, DEFAULT_VALUE);
+      if (params.v !== "Q") {
+        value = DEFAULT_VALUE;
+      }
       this.state = {
-        value: decompressString(params.v),
+        value,
       };
       console.log("this.state", this.state);
     }
@@ -178,12 +184,12 @@ const compressString = (string: string): string =>
     .replace(/\//g, "_") // Convert '/' to '_'
     .replace(/=+$/, ""); // Remove ending '='
 
-const decompressString = (string: string): string =>
+const decompressString = (string: string, defaultValue: string): string =>
   LZString.decompressFromBase64(
     string
       .replace(/-/g, "+") // Convert '-' to '+'
       .replace(/_/g, "/") // Convert '_' to '/'
-  ) ?? "";
+  ) ?? defaultValue;
 
 const Hr = styled.hr`
   border: 1px solid black;

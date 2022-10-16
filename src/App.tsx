@@ -43,6 +43,7 @@ class Sandbox extends React.Component<SandboxProps> {
     super(props);
     this.previewRef = React.createRef<HTMLParagraphElement>();
     this._isMounted = false;
+    this.timeoutID = undefined;
   }
 
   componentDidMount() {
@@ -55,6 +56,7 @@ class Sandbox extends React.Component<SandboxProps> {
     this._isMounted = false;
     if (this.timeoutID !== undefined) {
       clearTimeout(this.timeoutID);
+      this.timeoutID = undefined;
     }
   }
 
@@ -94,6 +96,12 @@ class Sandbox extends React.Component<SandboxProps> {
         }, 1000);
       } else {
         console.log("already have timeout");
+        clearTimeout(this.timeoutID);
+        this.timeoutID = setTimeout(() => {
+          console.log("trying again");
+          this.timeoutID = undefined;
+          this.updateMathJax(value);
+        }, 1000);
       }
 
       return;

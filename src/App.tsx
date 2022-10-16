@@ -1,13 +1,12 @@
 import React from "react";
 import styled from "styled-components";
 import "latex.css/style.css";
-import { useState } from "react";
+import LZString from "lz-string";
 
 /**
  * TODO:
  * - allow choice of katex
  * - add toolbar
- * - sharable URLs
  */
 
 declare global {
@@ -17,37 +16,50 @@ declare global {
 }
 
 function App() {
-  const [value, setValue] = useState<string>(
-    "\\zeta(s) = \\sum_{n=1}^\\infty \\frac{1}{n^s}"
-  );
   return (
     <div>
       <h1>MathJojo</h1>
       <br />
-      <Sandbox value={value} setValue={setValue} />
+      <Sandbox />
     </div>
   );
 }
 
-type SandboxProps = {
+type SandboxProps = {};
+
+type SandboxState = {
   value: string;
-  setValue: React.Dispatch<string>;
 };
 
-class Sandbox extends React.Component<SandboxProps> {
+class Sandbox extends React.Component<SandboxProps, SandboxState> {
   previewRef: null | React.RefObject<HTMLParagraphElement> = null;
   _isMounted: boolean = false;
   timeoutID: NodeJS.Timeout | undefined = undefined;
+
+  state = {
+    value: "\\zeta(s) = \\sum_{n=1}^\\infty \\frac{1}{n^s}",
+  };
 
   constructor(props: SandboxProps) {
     super(props);
     this.previewRef = React.createRef<HTMLParagraphElement>();
     this._isMounted = false;
     this.timeoutID = undefined;
+
+    const params = new Proxy(new URLSearchParams(window.location.search), {
+      get: (searchParams, prop: string) => searchParams.get(prop),
+    }) as any;
+    if (params.v) {
+      console.log("params.v", params.v);
+      this.state = {
+        value: decompressString(params.v),
+      };
+      console.log("this.state", this.state);
+    }
   }
 
   componentDidMount() {
-    const { value } = this.props;
+    const { value } = this.state;
     this._isMounted = true;
     this.updateMathJax(value);
   }
@@ -60,15 +72,24 @@ class Sandbox extends React.Component<SandboxProps> {
     }
   }
 
-  componentDidUpdate(prevProps: SandboxProps) {
-    const { value } = this.props;
+  componentDidUpdate(prevProps: SandboxProps, prevState: SandboxState) {
+    const { value } = this.state;
 
-    if (prevProps.value !== value) {
+    if (prevState.value !== value) {
       this.updateMathJax(value);
     }
   }
 
   updateMathJax(value: string) {
+    if ("URLSearchParams" in window) {
+      const compressedValue = compressString(value);
+      const searchParams = new URLSearchParams(window.location.search);
+      searchParams.set("v", compressedValue);
+      const newRelativePathQuery =
+        window.location.pathname + "?" + searchParams.toString();
+      window.history.pushState(null, "", newRelativePathQuery);
+    }
+
     const node = this.previewRef?.current;
     if (!this._isMounted) {
       console.log("not mounted");
@@ -133,13 +154,15 @@ class Sandbox extends React.Component<SandboxProps> {
   }
 
   render() {
-    const { value, setValue } = this.props;
+    const { value } = this.state;
     return (
       <div>
         <textarea
           value={value}
           onChange={(event) => {
-            setValue(event.target.value);
+            this.setState({
+              value: event.target.value,
+            });
           }}
         />
         <Hr />
@@ -148,6 +171,19 @@ class Sandbox extends React.Component<SandboxProps> {
     );
   }
 }
+
+const compressString = (string: string): string =>
+  LZString.compressToBase64(string)
+    .replace(/\+/g, "-") // Convert '+' to '-'
+    .replace(/\//g, "_") // Convert '/' to '_'
+    .replace(/=+$/, ""); // Remove ending '='
+
+const decompressString = (string: string): string =>
+  LZString.decompressFromBase64(
+    string
+      .replace(/-/g, "+") // Convert '-' to '+'
+      .replace(/_/g, "/") // Convert '_' to '/'
+  ) ?? "";
 
 const Hr = styled.hr`
   border: 1px solid black;

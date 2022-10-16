@@ -163,7 +163,8 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
     const { value } = this.state;
     return (
       <div>
-        <textarea
+        <TextArea
+          rows={10}
           value={value}
           onChange={(event) => {
             this.setState({
@@ -193,6 +194,10 @@ const decompressString = (string: string, defaultValue: string): string =>
 
 const Hr = styled.hr`
   border: 1px solid black;
+`;
+
+const TextArea = styled.textarea`
+  font-family: monospace;
 `;
 
 export default App;

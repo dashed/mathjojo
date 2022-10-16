@@ -2,7 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import "latex.css/style.css";
 import LZString from "lz-string";
-import katex from "katex";
+import katex, { KatexOptions } from "katex";
 import "katex/dist/katex.css";
 
 /**
@@ -101,6 +101,13 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
     const { value } = this.state;
     return (
       <div>
+        <h3>Cheatsheet</h3>
+        <p>
+          <b>Greek Letters</b>
+          <br />
+          <Katex source="\alpha" /> <Katex source="\beta" />
+        </p>
+        <br />
         <TextArea
           rows={10}
           value={value}
@@ -110,8 +117,14 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
             });
           }}
         />
-        <Hr />
-        <p ref={this.previewRef} />
+        <br />
+        <br />
+        <p>
+          <Katex
+            source={this.state.value}
+            katexOptions={{ displayMode: true }}
+          />
+        </p>
       </div>
     );
   }
@@ -130,12 +143,42 @@ const decompressString = (string: string, defaultValue: string): string =>
       .replace(/_/g, "/") // Convert '_' to '/'
   ) ?? defaultValue;
 
-const Hr = styled.hr`
-  border: 1px solid black;
-`;
-
 const TextArea = styled.textarea`
   font-family: monospace;
 `;
+
+type KatexProps = {
+  source: string;
+  katexOptions?: KatexOptions;
+};
+
+class Katex extends React.Component<KatexProps> {
+  previewRef: null | React.RefObject<HTMLElement> = null;
+  constructor(props: KatexProps) {
+    super(props);
+    this.previewRef = React.createRef<HTMLElement>();
+  }
+
+  componentDidMount() {
+    const { source } = this.props;
+    this.renderKatex(source);
+  }
+
+  renderKatex(value: string) {
+    const node = this.previewRef?.current;
+    if (!node) {
+      return;
+    }
+
+    katex.render(value, node, {
+      throwOnError: false,
+      ...this.props.katexOptions,
+    });
+  }
+
+  render() {
+    return <span ref={this.previewRef} />;
+  }
+}
 
 export default App;

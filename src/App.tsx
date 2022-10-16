@@ -107,15 +107,21 @@ class Sandbox extends React.Component<SandboxProps> {
       // pass
     }
 
+    console.log("updateMathJax");
+
     window.MathJax.texReset();
     window.MathJax.typesetClear([node]);
 
     node.innerHTML = `$$${value.trim()}$$`;
     // console.log("node.innerHTML", node.innerHTML);
 
-    window.MathJax.typesetPromise([node]).then(() => {
-      // console.log("typeset");
-    });
+    window.MathJax.typesetPromise([node])
+      .then(() => {
+        // console.log("typeset");
+      })
+      .catch((err: any) => {
+        console.error(err);
+      });
   }
 
   render() {

@@ -5,18 +5,70 @@ import LZString from "lz-string";
 import katex, { KatexOptions } from "katex";
 import "katex/dist/katex.css";
 
-/**
- * TODO:
- * - add toolbar
- */
-
-declare global {
-  interface Window {
-    MathJax: any;
-  }
-}
-
 const DEFAULT_VALUE = "\\zeta(s) = \\sum_{n=1}^\\infty \\frac{1}{n^s}";
+const LOWER_CASE_GREEK_LETTERS = [
+  "\\alpha",
+  "\\beta",
+  "\\gamma",
+  "\\delta",
+  "\\epsilon",
+  "\\zeta",
+  "\\eta",
+  "\\theta",
+  "\\iota",
+  "\\kappa",
+  "\\lambda",
+  "\\mu",
+  "\\nu",
+  "\\xi",
+  "\\omicron",
+  "\\pi",
+  "\\rho",
+  "\\sigma",
+  "\\tau",
+  "\\upsilon",
+  "\\phi",
+  "\\chi",
+  "\\psi",
+  "\\omega",
+];
+const UPPER_CASE_GREEK_LETTERS = [
+  "\\Alpha",
+  "\\Beta",
+  "\\Gamma",
+  "\\Delta",
+  "\\Epsilon",
+  "\\Zeta",
+  "\\Eta",
+  "\\Theta",
+  "\\Iota",
+  "\\Kappa",
+  "\\Lambda",
+  "\\Mu",
+  "\\Nu",
+  "\\Xi",
+  "\\Omicron",
+  "\\Pi",
+  "\\Rho",
+  "\\Sigma",
+  "\\Tau",
+  "\\Upsilon",
+  "\\Phi",
+  "\\Chi",
+  "\\Psi",
+  "\\Omega",
+];
+
+const SYMBOLS = [
+  "\\infty",
+  "\\aleph",
+  "\\emptyset",
+  "\\mathbb{R}",
+  "\\mathbb{C}",
+  "\\mathbb{Z}",
+  "\\in",
+  "\\notin",
+];
 
 function App() {
   return (
@@ -70,7 +122,9 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
     this.setState(
       {
         value:
-          value.slice(0, index) + String(insertedSource) + value.slice(index),
+          value.slice(0, element.selectionStart) +
+          String(insertedSource) +
+          value.slice(element.selectionEnd, value.length),
       },
       () => {
         const element = this.textAreaRef?.current;
@@ -91,13 +145,52 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
         <p>
           <b>Greek Letters</b>
           <br />
-          <QuickInsert
-            source="\alpha"
-            onClick={() => {
-              this.insertSource("\\alpha");
-            }}
-          />{" "}
-          <Katex source="\beta" />
+          {LOWER_CASE_GREEK_LETTERS.map((letter, index) => {
+            const isLast = index === LOWER_CASE_GREEK_LETTERS.length - 1;
+            return (
+              <React.Fragment>
+                <QuickInsert
+                  source={letter}
+                  onClick={() => {
+                    this.insertSource(letter);
+                  }}
+                />
+                {isLast ? "" : " "}
+              </React.Fragment>
+            );
+          })}
+          <br />
+          {UPPER_CASE_GREEK_LETTERS.map((letter, index) => {
+            const isLast = index === UPPER_CASE_GREEK_LETTERS.length - 1;
+            return (
+              <React.Fragment>
+                <QuickInsert
+                  source={letter}
+                  onClick={() => {
+                    this.insertSource(letter);
+                  }}
+                />
+                {isLast ? "" : " "}
+              </React.Fragment>
+            );
+          })}
+          <br />
+          <b>Symbols</b>
+          <br />
+          {SYMBOLS.map((letter, index) => {
+            const isLast = index === SYMBOLS.length - 1;
+            return (
+              <React.Fragment>
+                <QuickInsert
+                  source={letter}
+                  onClick={() => {
+                    this.insertSource(letter);
+                  }}
+                />
+                {isLast ? "" : " "}
+              </React.Fragment>
+            );
+          })}
         </p>
         <br />
         <TextArea
@@ -209,6 +302,7 @@ const QuickInsert = (props: QuickInsertProps) => {
   return (
     <a
       href="#insert"
+      title={source}
       onClick={(event) => {
         event.preventDefault();
         onClick();

@@ -7,7 +7,6 @@ import "katex/dist/katex.css";
 
 /**
  * TODO:
- * - allow choice of katex
  * - add toolbar
  */
 
@@ -60,6 +59,30 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
     }
   }
 
+  insertSource(insertedSource: string) {
+    const element = this.textAreaRef?.current;
+    if (!element) {
+      return;
+    }
+    const { value } = this.state;
+    const index = element.selectionStart;
+    const numOfChars = insertedSource.length;
+    this.setState(
+      {
+        value:
+          value.slice(0, index) + String(insertedSource) + value.slice(index),
+      },
+      () => {
+        const element = this.textAreaRef?.current;
+        if (!element) {
+          return;
+        }
+        element.focus();
+        element.setSelectionRange(index + numOfChars, index + numOfChars);
+      }
+    );
+  }
+
   render() {
     const { value } = this.state;
     return (
@@ -68,14 +91,12 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
         <p>
           <b>Greek Letters</b>
           <br />
-          <a
-            href="#insert"
-            onClick={(event) => {
-              event.preventDefault();
+          <QuickInsert
+            source="\alpha"
+            onClick={() => {
+              this.insertSource("\\alpha");
             }}
-          >
-            <Katex source="\alpha" />
-          </a>{" "}
+          />{" "}
           <Katex source="\beta" />
         </p>
         <br />
@@ -177,5 +198,25 @@ class Katex extends React.Component<KatexProps> {
     return <span ref={this.previewRef} />;
   }
 }
+
+type QuickInsertProps = {
+  source: string;
+  onClick: () => void;
+};
+
+const QuickInsert = (props: QuickInsertProps) => {
+  const { source, onClick } = props;
+  return (
+    <a
+      href="#insert"
+      onClick={(event) => {
+        event.preventDefault();
+        onClick();
+      }}
+    >
+      <Katex source={source} />
+    </a>
+  );
+};
 
 export default App;

@@ -68,7 +68,12 @@ class Sandbox extends React.Component<SandboxProps> {
 
   updateMathJax(value: string) {
     const node = this.previewRef?.current;
-    if (!this._isMounted || !node) {
+    if (!this._isMounted) {
+      console.log("not mounted");
+      return;
+    }
+    if (!node) {
+      console.log("no node");
       return;
     }
     if (
@@ -80,12 +85,15 @@ class Sandbox extends React.Component<SandboxProps> {
       )
     ) {
       if (this.timeoutID !== undefined) {
+        console.log("creating timeout");
         // Try again in a second
         this.timeoutID = setTimeout(() => {
           console.log("trying again");
           this.timeoutID = undefined;
           this.updateMathJax(value);
         }, 1000);
+      } else {
+        console.log("already have timeout");
       }
 
       return;

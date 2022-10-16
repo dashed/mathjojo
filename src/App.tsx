@@ -61,9 +61,13 @@ class Sandbox extends React.Component<SandboxProps> {
       return;
     }
 
-    if (window.MathJax.startup.document.state) {
+    try {
+      // This seems to error on pageload.
       window.MathJax.startup.document.state(0);
+    } catch (_e) {
+      // pass
     }
+
     window.MathJax.texReset();
     window.MathJax.typesetClear([node]);
 

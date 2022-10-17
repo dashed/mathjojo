@@ -155,7 +155,7 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
                 const newRelativePathQuery =
                   window.location.pathname + "?" + searchParams.toString();
 
-                window.history.pushState(null, "", newRelativePathQuery);
+                window.history.replaceState(null, "", newRelativePathQuery);
               }
             }}
           />

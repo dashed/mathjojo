@@ -96,10 +96,7 @@ const Settings = (props: Props) => {
           href="#enable-darkmode"
           onClick={(event) => {
             event.preventDefault();
-            if (!hasDarkMode) {
-              document.body.classList.add("latex-dark");
-              setDarkMode(true);
-            }
+            setDarkMode(true);
           }}
           style={{
             fontWeight: hasDarkMode ? "bold" : "normal",
@@ -111,10 +108,7 @@ const Settings = (props: Props) => {
           href="#disable-darkmode"
           onClick={(event) => {
             event.preventDefault();
-            if (hasDarkMode) {
-              document.body.classList.remove("latex-dark");
-              setDarkMode(false);
-            }
+            setDarkMode(false);
           }}
           style={{
             fontWeight: !hasDarkMode ? "bold" : "normal",

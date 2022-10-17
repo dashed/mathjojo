@@ -110,6 +110,17 @@ const Settings = (props: Props) => {
           No
         </a>
       </InlineOptions>
+      <div>
+        <small>
+          <a
+            href="https://github.com/dashed/mathjojo"
+            target="_blank"
+            rel="noreferrer"
+          >
+            GitHub
+          </a>
+        </small>
+      </div>
     </div>
   );
 };

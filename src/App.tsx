@@ -5,7 +5,7 @@ import LZString from "lz-string";
 import "katex/dist/katex.css";
 import CheatSheet from "./cheatsheet";
 import Katex from "./katex";
-
+import Settings from "./settings";
 const DEFAULT_VALUE = "\\zeta(s) = \\sum_{n=1}^\\infty \\frac{1}{n^s}";
 
 function App() {
@@ -22,6 +22,7 @@ type SandboxProps = {};
 
 type SandboxState = {
   displayMode: boolean;
+  displaySettings: boolean;
   displayCheatSheet: boolean;
   value: string;
 };
@@ -30,6 +31,7 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
   textAreaRef: null | React.RefObject<HTMLTextAreaElement> = null;
   state = {
     displayCheatSheet: true,
+    displaySettings: false,
     displayMode: true,
     value: DEFAULT_VALUE,
   };
@@ -104,39 +106,23 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
           }}
         />
         {this.state.displayCheatSheet ? <br /> : null}
-        <b>Display mode: </b>
-        <InlineOptions>
-          <a
-            href="#enable-displaymode"
-            onClick={(event) => {
-              event.preventDefault();
-              console.log("enable");
-              this.setState({
-                displayMode: true,
-              });
-            }}
-            style={{
-              fontWeight: this.state.displayMode ? "bold" : "normal",
-            }}
-          >
-            Yes
-          </a>
-          <a
-            href="#disable-displaymode"
-            onClick={(event) => {
-              event.preventDefault();
-              console.log("disable");
-              this.setState({
-                displayMode: false,
-              });
-            }}
-            style={{
-              fontWeight: !this.state.displayMode ? "bold" : "normal",
-            }}
-          >
-            No
-          </a>
-        </InlineOptions>
+        <Settings
+          displaySettings={this.state.displaySettings}
+          displayMode={this.state.displayMode}
+          setDisplayMode={(displayMode) => {
+            this.setState({
+              displayMode,
+            });
+          }}
+          toggleSettings={() => {
+            this.setState((state) => {
+              return {
+                ...state,
+                displaySettings: !state.displaySettings,
+              };
+            });
+          }}
+        />
         <br />
         <TextArea
           ref={this.textAreaRef}
@@ -195,11 +181,6 @@ const decompressString = (string: string, defaultValue: string): string =>
 
 const TextArea = styled.textarea`
   font-family: monospace;
-`;
-
-const InlineOptions = styled.div`
-  display: inline-flex;
-  gap: 16px;
 `;
 
 export default App;

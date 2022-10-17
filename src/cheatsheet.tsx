@@ -1,6 +1,6 @@
 import React from "react";
 import QuickInsert from "./quickinsert";
-
+import { InlineOptions } from "./styles";
 const LOWER_CASE_GREEK_LETTERS = [
   "\\alpha",
   "\\beta",
@@ -260,20 +260,20 @@ const CheatSheet = (props: Props) => {
       <br />
       <b>Layout / Common</b>
       <br />
-      {LAYOUT_COMMON.map((letter, index) => {
-        const isLast = index === LAYOUT_COMMON.length - 1;
-        return (
-          <React.Fragment key={`${letter}-${index}`}>
-            <QuickInsert
-              source={letter}
-              onClick={() => {
-                insertSource(letter);
-              }}
-            />
-            {isLast ? "" : " "}
-          </React.Fragment>
-        );
-      })}
+      <InlineOptions>
+        {LAYOUT_COMMON.map((letter, index) => {
+          return (
+            <React.Fragment key={`${letter}-${index}`}>
+              <QuickInsert
+                source={letter}
+                onClick={() => {
+                  insertSource(letter);
+                }}
+              />
+            </React.Fragment>
+          );
+        })}
+      </InlineOptions>
     </div>
   );
 };

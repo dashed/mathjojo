@@ -40,7 +40,6 @@ class Katex extends React.Component<KatexProps> {
     const { beforeRender } = this.props;
     if (beforeRender) {
       beforeRender();
-      console.log("this.props.katexOptions", this.props.katexOptions);
     }
 
     katex.render(value, node, {

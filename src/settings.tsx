@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { InlineOptions } from "./styles";
 
@@ -13,9 +13,20 @@ const Settings = (props: Props) => {
   const { setDisplayMode, displayMode, displaySettings, toggleSettings } =
     props;
 
+  const useDarkModeLocalStorage = localStorage.getItem("useDarkMode") === "1";
+
   const [hasDarkMode, setDarkMode] = useState(
-    document.body.classList.contains("latex-dark")
+    document.body.classList.contains("latex-dark") || useDarkModeLocalStorage
   );
+
+  useEffect(() => {
+    localStorage.setItem("useDarkMode", hasDarkMode ? "1" : "0");
+    if (hasDarkMode) {
+      if (!document.body.classList.contains("latex-dark")) {
+        document.body.classList.add("latex-dark");
+      }
+    }
+  }, [hasDarkMode]);
 
   if (!displaySettings) {
     return (

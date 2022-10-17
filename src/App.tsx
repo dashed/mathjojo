@@ -2,162 +2,11 @@ import React from "react";
 import styled from "styled-components";
 import "latex.css/style.css";
 import LZString from "lz-string";
-import katex, { KatexOptions } from "katex";
 import "katex/dist/katex.css";
-import shallowequal from "shallowequal";
+import CheatSheet from "./cheatsheet";
+import Katex from "./katex";
 
 const DEFAULT_VALUE = "\\zeta(s) = \\sum_{n=1}^\\infty \\frac{1}{n^s}";
-const LOWER_CASE_GREEK_LETTERS = [
-  "\\alpha",
-  "\\beta",
-  "\\gamma",
-  "\\delta",
-  "\\epsilon",
-  "\\zeta",
-  "\\eta",
-  "\\theta",
-  "\\iota",
-  "\\kappa",
-  "\\lambda",
-  "\\mu",
-  "\\nu",
-  "\\xi",
-  "\\omicron",
-  "\\pi",
-  "\\rho",
-  "\\sigma",
-  "\\tau",
-  "\\upsilon",
-  "\\phi",
-  "\\chi",
-  "\\psi",
-  "\\omega",
-];
-const UPPER_CASE_GREEK_LETTERS = [
-  "\\Alpha",
-  "\\Beta",
-  "\\Gamma",
-  "\\Delta",
-  "\\Epsilon",
-  "\\Zeta",
-  "\\Eta",
-  "\\Theta",
-  "\\Iota",
-  "\\Kappa",
-  "\\Lambda",
-  "\\Mu",
-  "\\Nu",
-  "\\Xi",
-  "\\Omicron",
-  "\\Pi",
-  "\\Rho",
-  "\\Sigma",
-  "\\Tau",
-  "\\Upsilon",
-  "\\Phi",
-  "\\Chi",
-  "\\Psi",
-  "\\Omega",
-];
-
-const SYMBOLS = [
-  "\\infty",
-  "\\aleph",
-  "\\emptyset",
-  "\\mathbb{R}",
-  "\\mathbb{C}",
-  "\\mathbb{Z}",
-  "\\in",
-  "\\notin",
-  "\\forall",
-  "\\exists",
-  "\\Re",
-  "\\Im",
-  "\\subset",
-  "\\supset",
-  "\\subseteq",
-  "\\supseteq",
-  "\\cap",
-  "\\cup",
-  "\\wedge",
-  "\\vee",
-  "\\cdot",
-
-  "\\langle",
-  "\\rangle",
-  "\\|",
-  "\\lceil",
-  "\\rceil",
-  "\\lfloor",
-  "\\rfloor",
-  "\\gets",
-  "\\to",
-  "\\leftarrow",
-  "\\rightarrow",
-  "\\uparrow",
-  "\\Uparrow",
-  "\\downarrow",
-  "\\Downarrow",
-  "\\updownarrow",
-  "\\Updownarrow",
-  "\\Leftarrow",
-  "\\Rightarrow",
-  "\\leftrightarrow",
-  "\\Leftrightarrow",
-  "\\mapsto",
-  "\\hookleftarrow",
-  "\\leftharpoonup",
-  "\\leftharpoondown",
-  "\\rightleftharpoons",
-  "\\longleftarrow",
-  "\\Longleftarrow",
-  "\\longrightarrow",
-  "\\Longrightarrow",
-  "\\longleftrightarrow",
-  "\\Longleftrightarrow",
-  "\\longmapsto",
-  "\\hookrightarrow",
-  "\\rightharpoonup",
-  "\\rightharpoondown",
-  "\\leadsto",
-  "\\nearrow",
-  "\\searrow",
-  "\\swarrow",
-  "\\nwarrow",
-  "\\surd",
-  "\\barwedge",
-  "\\veebar",
-  "\\odot",
-  "\\oplus",
-  "\\otimes",
-  "\\oslash",
-  "\\circledcirc",
-  "\\boxdot",
-  "\\bigtriangleup",
-];
-
-const ACCENTS = [
-  "\\hat{x}",
-  "\\vec{x}",
-  "\\bar{x}",
-  "\\~{x}",
-  "\\v{x}",
-  "\\ddot{x}",
-  "\\r{x}",
-  "\\u{x}",
-  "\\c{x}",
-];
-
-const LAYOUT_COMMON = [
-  "\\frac{a}{b}",
-  "\\sqrt{x}",
-  "\\frac{\\partial}{\\partial x}",
-  "\\frac{\\text{d}}{\\text{d}x}",
-  "\\int_{a}^{b} f(x) \\text{d}x",
-  "\\lim_{x \\rightarrow a} f(x)",
-  "x = \\left\\{ a | b \\right\\}",
-  "\\sum_{i=1}^{k+1}i",
-];
 
 function App() {
   return (
@@ -239,96 +88,21 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
   }
 
   render() {
-    const { value } = this.state;
-    console.log("this.state.displayMode", this.state.displayMode);
+    const { value, displayCheatSheet } = this.state;
     return (
       <div>
-        <div>
-          <span>Hide Cheatsheet</span>
-          <br />
-          <b>Greek Letters</b>
-          <br />
-          {LOWER_CASE_GREEK_LETTERS.map((letter, index) => {
-            const isLast = index === LOWER_CASE_GREEK_LETTERS.length - 1;
-            return (
-              <React.Fragment key={`${letter}-${index}`}>
-                <QuickInsert
-                  source={letter}
-                  onClick={() => {
-                    this.insertSource(letter);
-                  }}
-                />
-                {isLast ? "" : " "}
-              </React.Fragment>
-            );
-          })}
-          <br />
-          {UPPER_CASE_GREEK_LETTERS.map((letter, index) => {
-            const isLast = index === UPPER_CASE_GREEK_LETTERS.length - 1;
-            return (
-              <React.Fragment key={`${letter}-${index}`}>
-                <QuickInsert
-                  source={letter}
-                  onClick={() => {
-                    this.insertSource(letter);
-                  }}
-                />
-                {isLast ? "" : " "}
-              </React.Fragment>
-            );
-          })}
-          <br />
-          <b>Symbols</b>
-          <br />
-          {SYMBOLS.map((letter, index) => {
-            const isLast = index === SYMBOLS.length - 1;
-            return (
-              <React.Fragment key={`${letter}-${index}`}>
-                <QuickInsert
-                  source={letter}
-                  onClick={() => {
-                    this.insertSource(letter);
-                  }}
-                />
-                {isLast ? "" : " "}
-              </React.Fragment>
-            );
-          })}
-          <br />
-          <b>Accents</b>
-          <br />
-          {ACCENTS.map((letter, index) => {
-            const isLast = index === ACCENTS.length - 1;
-            return (
-              <React.Fragment key={`${letter}-${index}`}>
-                <QuickInsert
-                  source={letter}
-                  onClick={() => {
-                    this.insertSource(letter);
-                  }}
-                />
-                {isLast ? "" : " "}
-              </React.Fragment>
-            );
-          })}
-          <br />
-          <b>Layout / Common</b>
-          <br />
-          {LAYOUT_COMMON.map((letter, index) => {
-            const isLast = index === LAYOUT_COMMON.length - 1;
-            return (
-              <React.Fragment key={`${letter}-${index}`}>
-                <QuickInsert
-                  source={letter}
-                  onClick={() => {
-                    this.insertSource(letter);
-                  }}
-                />
-                {isLast ? "" : " "}
-              </React.Fragment>
-            );
-          })}
-        </div>
+        <CheatSheet
+          displayCheatSheet={displayCheatSheet}
+          insertSource={this.insertSource}
+          toggleCheatSheet={() => {
+            this.setState((state) => {
+              return {
+                ...state,
+                displayCheatSheet: !state.displayCheatSheet,
+              };
+            });
+          }}
+        />
         <br />
         <b>Display mode: </b>
         <InlineOptions>
@@ -366,7 +140,7 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
         <br />
         <TextArea
           ref={this.textAreaRef}
-          rows={10}
+          rows={5}
           value={value}
           onChange={(event) => {
             this.setState({
@@ -422,78 +196,6 @@ const decompressString = (string: string, defaultValue: string): string =>
 const TextArea = styled.textarea`
   font-family: monospace;
 `;
-
-type KatexProps = {
-  source: string;
-  katexOptions?: KatexOptions;
-  beforeRender?: () => void;
-};
-
-class Katex extends React.Component<KatexProps> {
-  previewRef: null | React.RefObject<HTMLElement> = null;
-  constructor(props: KatexProps) {
-    super(props);
-    this.previewRef = React.createRef<HTMLElement>();
-  }
-
-  componentDidMount() {
-    const { source } = this.props;
-    this.renderKatex(source);
-  }
-
-  componentDidUpdate(prevProps: KatexProps) {
-    const { source, katexOptions } = this.props;
-    if (
-      prevProps.source !== source ||
-      !shallowequal(katexOptions, prevProps.katexOptions)
-    ) {
-      this.renderKatex(source);
-    }
-  }
-
-  renderKatex(value: string) {
-    const node = this.previewRef?.current;
-    if (!node) {
-      return;
-    }
-
-    const { beforeRender } = this.props;
-    if (beforeRender) {
-      beforeRender();
-      console.log("this.props.katexOptions", this.props.katexOptions);
-    }
-
-    katex.render(value, node, {
-      throwOnError: false,
-      ...this.props.katexOptions,
-    });
-  }
-
-  render() {
-    return <span ref={this.previewRef} />;
-  }
-}
-
-type QuickInsertProps = {
-  source: string;
-  onClick: () => void;
-};
-
-const QuickInsert = (props: QuickInsertProps) => {
-  const { source, onClick } = props;
-  return (
-    <a
-      href="#insert"
-      title={source}
-      onClick={(event) => {
-        event.preventDefault();
-        onClick();
-      }}
-    >
-      <Katex source={source} />
-    </a>
-  );
-};
 
 const InlineOptions = styled.div`
   display: inline-flex;

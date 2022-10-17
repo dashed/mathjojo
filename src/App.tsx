@@ -61,7 +61,7 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
     }
   }
 
-  insertSource(insertedSource: string) {
+  insertSource = (insertedSource: string) => {
     const element = this.textAreaRef?.current;
     if (!element) {
       return;
@@ -85,7 +85,7 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
         element.setSelectionRange(index + numOfChars, index + numOfChars);
       }
     );
-  }
+  };
 
   render() {
     const { value, displayCheatSheet } = this.state;
@@ -103,7 +103,7 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
             });
           }}
         />
-        <br />
+        {this.state.displayCheatSheet ? <br /> : null}
         <b>Display mode: </b>
         <InlineOptions>
           <a

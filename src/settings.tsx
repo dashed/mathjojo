@@ -111,15 +111,26 @@ const Settings = (props: Props) => {
         </a>
       </InlineOptions>
       <div>
-        <small>
-          <a
-            href="https://github.com/dashed/mathjojo"
-            target="_blank"
-            rel="noreferrer"
-          >
-            GitHub
-          </a>
-        </small>
+        <InlineOptions>
+          <small>
+            <a
+              href="https://github.com/dashed/mathjojo"
+              target="_blank"
+              rel="noreferrer"
+            >
+              GitHub
+            </a>
+          </small>
+          <small>
+            <a
+              href="https://katex.org/docs/supported.html"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Supported TeX functions
+            </a>
+          </small>
+        </InlineOptions>
       </div>
     </div>
   );

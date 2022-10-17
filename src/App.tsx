@@ -4,6 +4,7 @@ import "latex.css/style.css";
 import LZString from "lz-string";
 import katex, { KatexOptions } from "katex";
 import "katex/dist/katex.css";
+import shallowequal from "shallowequal";
 
 const DEFAULT_VALUE = "\\zeta(s) = \\sum_{n=1}^\\infty \\frac{1}{n^s}";
 const LOWER_CASE_GREEK_LETTERS = [
@@ -68,6 +69,94 @@ const SYMBOLS = [
   "\\mathbb{Z}",
   "\\in",
   "\\notin",
+  "\\forall",
+  "\\exists",
+  "\\Re",
+  "\\Im",
+  "\\subset",
+  "\\supset",
+  "\\subseteq",
+  "\\supseteq",
+  "\\cap",
+  "\\cup",
+  "\\wedge",
+  "\\vee",
+  "\\cdot",
+
+  "\\langle",
+  "\\rangle",
+  "\\|",
+  "\\lceil",
+  "\\rceil",
+  "\\lfloor",
+  "\\rfloor",
+  "\\gets",
+  "\\to",
+  "\\leftarrow",
+  "\\rightarrow",
+  "\\uparrow",
+  "\\Uparrow",
+  "\\downarrow",
+  "\\Downarrow",
+  "\\updownarrow",
+  "\\Updownarrow",
+  "\\Leftarrow",
+  "\\Rightarrow",
+  "\\leftrightarrow",
+  "\\Leftrightarrow",
+  "\\mapsto",
+  "\\hookleftarrow",
+  "\\leftharpoonup",
+  "\\leftharpoondown",
+  "\\rightleftharpoons",
+  "\\longleftarrow",
+  "\\Longleftarrow",
+  "\\longrightarrow",
+  "\\Longrightarrow",
+  "\\longleftrightarrow",
+  "\\Longleftrightarrow",
+  "\\longmapsto",
+  "\\hookrightarrow",
+  "\\rightharpoonup",
+  "\\rightharpoondown",
+  "\\leadsto",
+  "\\nearrow",
+  "\\searrow",
+  "\\swarrow",
+  "\\nwarrow",
+  "\\surd",
+  "\\barwedge",
+  "\\veebar",
+  "\\odot",
+  "\\oplus",
+  "\\otimes",
+  "\\oslash",
+  "\\circledcirc",
+  "\\boxdot",
+  "\\bigtriangleup",
+];
+
+const ACCENTS = [
+  "\\hat{x}",
+  "\\vec{x}",
+  "\\bar{x}",
+  "\\~{x}",
+  "\\v{x}",
+  "\\ddot{x}",
+  "\\r{x}",
+  "\\u{x}",
+  "\\c{x}",
+];
+
+const LAYOUT_COMMON = [
+  "\\frac{a}{b}",
+  "\\sqrt{x}",
+  "\\frac{\\partial}{\\partial x}",
+  "\\frac{\\text{d}}{\\text{d}x}",
+  "\\int_{a}^{b} f(x) \\text{d}x",
+  "\\lim_{x \\rightarrow a} f(x)",
+  "x = \\left\\{ a | b \\right\\}",
+  "\\sum_{i=1}^{k+1}i",
 ];
 
 function App() {
@@ -83,12 +172,16 @@ function App() {
 type SandboxProps = {};
 
 type SandboxState = {
+  displayMode: boolean;
+  displayCheatSheet: boolean;
   value: string;
 };
 
 class Sandbox extends React.Component<SandboxProps, SandboxState> {
   textAreaRef: null | React.RefObject<HTMLTextAreaElement> = null;
   state = {
+    displayCheatSheet: true,
+    displayMode: true,
     value: DEFAULT_VALUE,
   };
 
@@ -106,7 +199,15 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
         value = DEFAULT_VALUE;
       }
       this.state = {
+        ...this.state,
         value,
+      };
+    }
+
+    if (params.displayMode) {
+      this.state = {
+        ...this.state,
+        displayMode: !(params.displayMode === "0"),
       };
     }
   }
@@ -139,16 +240,18 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
 
   render() {
     const { value } = this.state;
+    console.log("this.state.displayMode", this.state.displayMode);
     return (
       <div>
-        <h3>Cheatsheet</h3>
-        <p>
+        <div>
+          <span>Hide Cheatsheet</span>
+          <br />
           <b>Greek Letters</b>
           <br />
           {LOWER_CASE_GREEK_LETTERS.map((letter, index) => {
             const isLast = index === LOWER_CASE_GREEK_LETTERS.length - 1;
             return (
-              <React.Fragment>
+              <React.Fragment key={`${letter}-${index}`}>
                 <QuickInsert
                   source={letter}
                   onClick={() => {
@@ -163,7 +266,7 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
           {UPPER_CASE_GREEK_LETTERS.map((letter, index) => {
             const isLast = index === UPPER_CASE_GREEK_LETTERS.length - 1;
             return (
-              <React.Fragment>
+              <React.Fragment key={`${letter}-${index}`}>
                 <QuickInsert
                   source={letter}
                   onClick={() => {
@@ -180,7 +283,7 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
           {SYMBOLS.map((letter, index) => {
             const isLast = index === SYMBOLS.length - 1;
             return (
-              <React.Fragment>
+              <React.Fragment key={`${letter}-${index}`}>
                 <QuickInsert
                   source={letter}
                   onClick={() => {
@@ -191,7 +294,75 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
               </React.Fragment>
             );
           })}
-        </p>
+          <br />
+          <b>Accents</b>
+          <br />
+          {ACCENTS.map((letter, index) => {
+            const isLast = index === ACCENTS.length - 1;
+            return (
+              <React.Fragment key={`${letter}-${index}`}>
+                <QuickInsert
+                  source={letter}
+                  onClick={() => {
+                    this.insertSource(letter);
+                  }}
+                />
+                {isLast ? "" : " "}
+              </React.Fragment>
+            );
+          })}
+          <br />
+          <b>Layout / Common</b>
+          <br />
+          {LAYOUT_COMMON.map((letter, index) => {
+            const isLast = index === LAYOUT_COMMON.length - 1;
+            return (
+              <React.Fragment key={`${letter}-${index}`}>
+                <QuickInsert
+                  source={letter}
+                  onClick={() => {
+                    this.insertSource(letter);
+                  }}
+                />
+                {isLast ? "" : " "}
+              </React.Fragment>
+            );
+          })}
+        </div>
+        <br />
+        <b>Display mode: </b>
+        <InlineOptions>
+          <a
+            href="#enable-displaymode"
+            onClick={(event) => {
+              event.preventDefault();
+              console.log("enable");
+              this.setState({
+                displayMode: true,
+              });
+            }}
+            style={{
+              fontWeight: this.state.displayMode ? "bold" : "normal",
+            }}
+          >
+            Yes
+          </a>
+          <a
+            href="#disable-displaymode"
+            onClick={(event) => {
+              event.preventDefault();
+              console.log("disable");
+              this.setState({
+                displayMode: false,
+              });
+            }}
+            style={{
+              fontWeight: !this.state.displayMode ? "bold" : "normal",
+            }}
+          >
+            No
+          </a>
+        </InlineOptions>
         <br />
         <TextArea
           ref={this.textAreaRef}
@@ -208,16 +379,23 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
         <p>
           <Katex
             source={value}
-            katexOptions={{ displayMode: true }}
+            katexOptions={{ displayMode: this.state.displayMode }}
             beforeRender={() => {
               if ("URLSearchParams" in window) {
                 const compressedValue = compressString(value);
                 const searchParams = new URLSearchParams(
                   window.location.search
                 );
+
                 searchParams.set("v", compressedValue);
+                searchParams.set(
+                  "displayMode",
+                  this.state.displayMode ? "1" : "0"
+                );
+
                 const newRelativePathQuery =
                   window.location.pathname + "?" + searchParams.toString();
+
                 window.history.pushState(null, "", newRelativePathQuery);
               }
             }}
@@ -264,8 +442,11 @@ class Katex extends React.Component<KatexProps> {
   }
 
   componentDidUpdate(prevProps: KatexProps) {
-    const { source } = this.props;
-    if (prevProps.source !== source) {
+    const { source, katexOptions } = this.props;
+    if (
+      prevProps.source !== source ||
+      !shallowequal(katexOptions, prevProps.katexOptions)
+    ) {
       this.renderKatex(source);
     }
   }
@@ -279,6 +460,7 @@ class Katex extends React.Component<KatexProps> {
     const { beforeRender } = this.props;
     if (beforeRender) {
       beforeRender();
+      console.log("this.props.katexOptions", this.props.katexOptions);
     }
 
     katex.render(value, node, {
@@ -312,5 +494,10 @@ const QuickInsert = (props: QuickInsertProps) => {
     </a>
   );
 };
+
+const InlineOptions = styled.div`
+  display: inline-flex;
+  gap: 16px;
+`;
 
 export default App;

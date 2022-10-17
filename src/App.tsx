@@ -141,7 +141,7 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
             katexOptions={{ displayMode: this.state.displayMode }}
             beforeRender={() => {
               if ("URLSearchParams" in window) {
-                const compressedValue = compressString(value);
+                const compressedValue = compressString(value.trim());
                 const searchParams = new URLSearchParams(
                   window.location.search
                 );

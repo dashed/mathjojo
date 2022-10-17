@@ -127,6 +127,7 @@ const SYMBOLS = [
   "\\circledcirc",
   "\\boxdot",
   "\\bigtriangleup",
+  "\\neg",
 ];
 
 const ACCENTS = [

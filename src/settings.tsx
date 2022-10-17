@@ -25,6 +25,8 @@ const Settings = (props: Props) => {
       if (!document.body.classList.contains("latex-dark")) {
         document.body.classList.add("latex-dark");
       }
+    } else {
+      document.body.classList.remove("latex-dark");
     }
   }, [hasDarkMode]);
 

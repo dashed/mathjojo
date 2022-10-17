@@ -1,5 +1,5 @@
 import React from "react";
-import styled from "styled-components";
+import styled, { createGlobalStyle } from "styled-components";
 import "latex.css/style.css";
 import LZString from "lz-string";
 import "katex/dist/katex.css";
@@ -8,9 +8,19 @@ import Katex from "./katex";
 import Settings from "./settings";
 const DEFAULT_VALUE = "\\zeta(s) = \\sum_{n=1}^\\infty \\frac{1}{n^s}";
 
+const GlobalStyle = createGlobalStyle`
+  .latex-dark {
+    textarea {
+      color: #f8f9fa;
+      background-color: #212529;
+    }
+  }
+`;
+
 function App() {
   return (
     <div>
+      <GlobalStyle />
       <h1>MathJojo</h1>
       <Sandbox />
     </div>

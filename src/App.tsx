@@ -12,7 +12,6 @@ function App() {
   return (
     <div>
       <h1>MathJojo</h1>
-      <br />
       <Sandbox />
     </div>
   );
@@ -68,6 +67,7 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
     if (!element) {
       return;
     }
+    insertedSource = insertedSource.trim();
     const { value } = this.state;
     const index = element.selectionStart;
     const numOfChars = insertedSource.length;
@@ -134,7 +134,6 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
             });
           }}
         />
-        <br />
         <br />
         <p>
           <Katex

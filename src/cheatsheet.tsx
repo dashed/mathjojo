@@ -76,7 +76,6 @@ const SYMBOLS = [
   "\\wedge",
   "\\vee",
   "\\cdot",
-
   "\\langle",
   "\\rangle",
   "\\|",
@@ -134,12 +133,11 @@ const ACCENTS = [
   "\\hat{x}",
   "\\vec{x}",
   "\\bar{x}",
-  "\\~{x}",
-  "\\v{x}",
+  "\\tilde{x}",
+  "\\check{x}",
   "\\ddot{x}",
-  "\\r{x}",
-  "\\u{x}",
-  "\\c{x}",
+  "\\mathring{x}",
+  "\\breve{x}",
 ];
 
 const LAYOUT_COMMON = [
@@ -151,6 +149,12 @@ const LAYOUT_COMMON = [
   "\\lim_{x \\rightarrow a} f(x)",
   "x = \\left\\{ a | b \\right\\}",
   "\\sum_{i=1}^{k+1}i",
+  `
+\\begin{matrix}
+  a & b \\\\
+  c & d
+\\end{matrix}
+  `,
 ];
 
 type Props = {

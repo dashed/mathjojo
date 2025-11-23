@@ -86,7 +86,7 @@ describe("URL parameter handling", () => {
   });
 
   afterEach(() => {
-    window.location = originalLocation;
+    window.location = originalLocation as any;
   });
 
   test("loads value from URL parameter", () => {

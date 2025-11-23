@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useCallback, useMemo, useRef } from "react";
 import styled, { createGlobalStyle } from "styled-components";
 import "latex.css/style.css";
 import LZString from "lz-string";
@@ -27,227 +27,213 @@ function App() {
   );
 }
 
-type SandboxProps = {};
+const Sandbox: React.FC = () => {
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
-type SandboxState = {
-  displayMode: boolean;
-  displaySettings: boolean;
-  displayCheatSheet: boolean;
-  value: string;
-};
-
-class Sandbox extends React.Component<SandboxProps, SandboxState> {
-  textAreaRef: null | React.RefObject<HTMLTextAreaElement> = null;
-  state = {
-    displayCheatSheet: true,
-    displaySettings: false,
-    displayMode: true,
-    value: DEFAULT_VALUE,
-  };
-
-  constructor(props: SandboxProps) {
-    super(props);
-
-    this.textAreaRef = React.createRef<HTMLTextAreaElement>();
-
+  // Initialize state from URL parameters
+  const getInitialState = () => {
     const params = new Proxy(new URLSearchParams(window.location.search), {
       get: (searchParams, prop: string) => searchParams.get(prop),
     }) as any;
+
+    let initialValue = DEFAULT_VALUE;
     if (params.v) {
       let value = decompressString(params.v, DEFAULT_VALUE);
       if (value.trim() === "" && params.v !== "Q") {
         value = DEFAULT_VALUE;
       }
-      this.state = {
-        ...this.state,
-        value,
-      };
+      initialValue = value;
     }
 
-    if (params.displayMode) {
-      this.state = {
-        ...this.state,
-        displayMode: !(params.displayMode === "0"),
-      };
-    }
-  }
+    const initialDisplayMode = params.displayMode
+      ? !(params.displayMode === "0")
+      : true;
 
-  insertSource = (insertedSource: string) => {
-    const element = this.textAreaRef?.current;
-    if (!element) {
-      return;
-    }
-    insertedSource = insertedSource.trim();
-    const { value } = this.state;
-    const index = element.selectionStart;
-
-    // Smart cursor positioning inspired by mathURL
-    // Priority:
-    // 1. Find {x}, {a}, {b}, etc. and select the placeholder
-    // 2. Find {} empty braces and position inside
-    // 3. Find & for matrices/alignments
-    // 4. Find $$ for display math
-    // 5. Default to end of inserted text
-    let cursorOffset = this.calculateSmartCursorOffset(insertedSource);
-
-    this.setState(
-      {
-        value:
-          value.slice(0, element.selectionStart) +
-          String(insertedSource) +
-          value.slice(element.selectionEnd, value.length),
-      },
-      () => {
-        const element = this.textAreaRef?.current;
-        if (!element) {
-          return;
-        }
-        element.focus();
-
-        // If we found a placeholder to select, set selection range
-        // Otherwise just position cursor
-        if (cursorOffset.isSelection) {
-          element.setSelectionRange(
-            index + cursorOffset.start,
-            index + cursorOffset.end
-          );
-        } else {
-          element.setSelectionRange(
-            index + cursorOffset.start,
-            index + cursorOffset.start
-          );
-        }
-      }
-    );
-  };
-
-  calculateSmartCursorOffset = (
-    text: string
-  ): { start: number; end: number; isSelection: boolean } => {
-    // First, try to find a placeholder like {x}, {a}, {b}, etc.
-    // This is a single letter inside braces that we want to select
-    const placeholderMatch = text.match(/\{([a-zA-Z])\}/);
-    if (placeholderMatch && placeholderMatch.index !== undefined) {
-      const start = placeholderMatch.index + 1; // Position after '{'
-      return {
-        start,
-        end: start + placeholderMatch[1].length,
-        isSelection: true,
-      };
-    }
-
-    // Try to find empty braces {} and position cursor inside
-    const emptyBracesIndex = text.indexOf("{}");
-    if (emptyBracesIndex !== -1) {
-      return {
-        start: emptyBracesIndex + 1, // Position after '{'
-        end: emptyBracesIndex + 1,
-        isSelection: false,
-      };
-    }
-
-    // Try to find & (useful for matrices and alignments)
-    const ampersandIndex = text.indexOf("&");
-    if (ampersandIndex !== -1) {
-      return {
-        start: ampersandIndex,
-        end: ampersandIndex,
-        isSelection: false,
-      };
-    }
-
-    // Try to find $$ (display math delimiters)
-    const dollarIndex = text.indexOf("$$");
-    if (dollarIndex !== -1) {
-      return {
-        start: dollarIndex,
-        end: dollarIndex,
-        isSelection: false,
-      };
-    }
-
-    // Default: position at end of inserted text
     return {
-      start: text.length,
-      end: text.length,
-      isSelection: false,
+      value: initialValue,
+      displayMode: initialDisplayMode,
     };
   };
 
-  render() {
-    const { value, displayCheatSheet } = this.state;
-    return (
-      <div>
-        <CheatSheet
-          displayCheatSheet={displayCheatSheet}
-          insertSource={this.insertSource}
-          toggleCheatSheet={() => {
-            this.setState((state) => {
-              return {
-                ...state,
-                displayCheatSheet: !state.displayCheatSheet,
-              };
-            });
-          }}
-        />
-        {this.state.displayCheatSheet ? <br /> : null}
-        <Settings
-          displaySettings={this.state.displaySettings}
-          displayMode={this.state.displayMode}
-          setDisplayMode={(displayMode) => {
-            this.setState({
-              displayMode,
-            });
-          }}
-          toggleSettings={() => {
-            this.setState((state) => {
-              return {
-                ...state,
-                displaySettings: !state.displaySettings,
-              };
-            });
-          }}
-        />
-        <br />
-        <TextArea
-          ref={this.textAreaRef}
-          rows={5}
-          value={value}
-          onChange={(event) => {
-            this.setState({
-              value: event.target.value,
-            });
-          }}
-        />
-        <br />
-        <p>
-          <Katex
-            source={value}
-            katexOptions={{ displayMode: this.state.displayMode }}
-            beforeRender={() => {
-              if ("URLSearchParams" in window) {
-                const compressedValue = compressString(value.trim());
-                const searchParams = new URLSearchParams(
-                  window.location.search
-                );
+  const initialState = getInitialState();
+  const [displayCheatSheet, setDisplayCheatSheet] = useState(true);
+  const [displaySettings, setDisplaySettings] = useState(false);
+  const [displayMode, setDisplayMode] = useState(initialState.displayMode);
+  const [value, setValue] = useState(initialState.value);
 
-                searchParams.set("v", compressedValue);
-                searchParams.set(
-                  "displayMode",
-                  this.state.displayMode ? "1" : "0"
-                );
+  const calculateSmartCursorOffset = useCallback(
+    (text: string): { start: number; end: number; isSelection: boolean } => {
+      // First, try to find a placeholder like {x}, {a}, {b}, etc.
+      // This is a single letter inside braces that we want to select
+      const placeholderMatch = text.match(/\{([a-zA-Z])\}/);
+      if (placeholderMatch && placeholderMatch.index !== undefined) {
+        const start = placeholderMatch.index + 1; // Position after '{'
+        return {
+          start,
+          end: start + placeholderMatch[1].length,
+          isSelection: true,
+        };
+      }
 
-                const newRelativePathQuery =
-                  window.location.pathname + "?" + searchParams.toString();
+      // Try to find empty braces {} and position cursor inside
+      const emptyBracesIndex = text.indexOf("{}");
+      if (emptyBracesIndex !== -1) {
+        return {
+          start: emptyBracesIndex + 1, // Position after '{'
+          end: emptyBracesIndex + 1,
+          isSelection: false,
+        };
+      }
 
-                window.history.replaceState(null, "", newRelativePathQuery);
-              }
-            }}
-          />
-        </p>
-      </div>
-    );
-  }
+      // Try to find & (useful for matrices and alignments)
+      const ampersandIndex = text.indexOf("&");
+      if (ampersandIndex !== -1) {
+        return {
+          start: ampersandIndex,
+          end: ampersandIndex,
+          isSelection: false,
+        };
+      }
+
+      // Try to find $$ (display math delimiters)
+      const dollarIndex = text.indexOf("$$");
+      if (dollarIndex !== -1) {
+        return {
+          start: dollarIndex,
+          end: dollarIndex,
+          isSelection: false,
+        };
+      }
+
+      // Default: position at end of inserted text
+      return {
+        start: text.length,
+        end: text.length,
+        isSelection: false,
+      };
+    },
+    []
+  );
+
+  const insertSource = useCallback(
+    (insertedSource: string) => {
+      const element = textAreaRef.current;
+      if (!element) {
+        return;
+      }
+      insertedSource = insertedSource.trim();
+      const index = element.selectionStart;
+
+      // Smart cursor positioning inspired by mathURL
+      // Priority:
+      // 1. Find {x}, {a}, {b}, etc. and select the placeholder
+      // 2. Find {} empty braces and position inside
+      // 3. Find & for matrices/alignments
+      // 4. Find $$ for display math
+      // 5. Default to end of inserted text
+      const cursorOffset = calculateSmartCursorOffset(insertedSource);
+
+      setValue((currentValue) => {
+        const newValue =
+          currentValue.slice(0, element.selectionStart) +
+          String(insertedSource) +
+          currentValue.slice(element.selectionEnd, currentValue.length);
+
+        // Use setTimeout to ensure state update completes before focusing
+        setTimeout(() => {
+          const element = textAreaRef.current;
+          if (!element) {
+            return;
+          }
+          element.focus();
+
+          // If we found a placeholder to select, set selection range
+          // Otherwise just position cursor
+          if (cursorOffset.isSelection) {
+            element.setSelectionRange(
+              index + cursorOffset.start,
+              index + cursorOffset.end
+            );
+          } else {
+            element.setSelectionRange(
+              index + cursorOffset.start,
+              index + cursorOffset.start
+            );
+          }
+        }, 0);
+
+        return newValue;
+      });
+    },
+    [calculateSmartCursorOffset]
+  );
+
+  const toggleCheatSheet = useCallback(() => {
+    setDisplayCheatSheet((prev) => !prev);
+  }, []);
+
+  const toggleSettings = useCallback(() => {
+    setDisplaySettings((prev) => !prev);
+  }, []);
+
+  const handleValueChange = useCallback(
+    (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setValue(event.target.value);
+    },
+    []
+  );
+
+  const beforeRender = useCallback(() => {
+    if ("URLSearchParams" in window) {
+      const compressedValue = compressString(value.trim());
+      const searchParams = new URLSearchParams(window.location.search);
+
+      searchParams.set("v", compressedValue);
+      searchParams.set("displayMode", displayMode ? "1" : "0");
+
+      const newRelativePathQuery =
+        window.location.pathname + "?" + searchParams.toString();
+
+      window.history.replaceState(null, "", newRelativePathQuery);
+    }
+  }, [value, displayMode]);
+
+  const katexOptions = useMemo(
+    () => ({ displayMode }),
+    [displayMode]
+  );
+
+  return (
+    <div>
+      <CheatSheet
+        displayCheatSheet={displayCheatSheet}
+        insertSource={insertSource}
+        toggleCheatSheet={toggleCheatSheet}
+      />
+      {displayCheatSheet ? <br /> : null}
+      <Settings
+        displaySettings={displaySettings}
+        displayMode={displayMode}
+        setDisplayMode={setDisplayMode}
+        toggleSettings={toggleSettings}
+      />
+      <br />
+      <TextArea
+        ref={textAreaRef}
+        rows={5}
+        value={value}
+        onChange={handleValueChange}
+      />
+      <br />
+      <p>
+        <Katex
+          source={value}
+          katexOptions={katexOptions}
+          beforeRender={beforeRender}
+        />
+      </p>
+    </div>
+  );
 }
 
 const compressString = (string: string): string =>

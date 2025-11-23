@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 
 import katex, { KatexOptions } from "katex";
 import shallowequal from "shallowequal";
@@ -9,48 +9,47 @@ type KatexProps = {
   beforeRender?: () => void;
 };
 
-class Katex extends React.Component<KatexProps> {
-  previewRef: null | React.RefObject<HTMLElement> = null;
-  constructor(props: KatexProps) {
-    super(props);
-    this.previewRef = React.createRef<HTMLElement>();
-  }
+const Katex: React.FC<KatexProps> = ({
+  source,
+  katexOptions,
+  beforeRender,
+}) => {
+  const previewRef = useRef<HTMLSpanElement>(null);
+  const prevSourceRef = useRef<string>();
+  const prevKatexOptionsRef = useRef<KatexOptions | undefined>();
+  const beforeRenderRef = useRef<(() => void) | undefined>();
 
-  componentDidMount() {
-    const { source } = this.props;
-    this.renderKatex(source);
-  }
+  // Keep beforeRender callback up to date without causing re-renders
+  beforeRenderRef.current = beforeRender;
 
-  componentDidUpdate(prevProps: KatexProps) {
-    const { source, katexOptions } = this.props;
-    if (
-      prevProps.source !== source ||
-      !shallowequal(katexOptions, prevProps.katexOptions)
-    ) {
-      this.renderKatex(source);
-    }
-  }
-
-  renderKatex(value: string) {
-    const node = this.previewRef?.current;
+  useEffect(() => {
+    const node = previewRef.current;
     if (!node) {
       return;
     }
 
-    const { beforeRender } = this.props;
-    if (beforeRender) {
-      beforeRender();
+    // Check if source or katexOptions changed (mimics componentDidUpdate logic)
+    const shouldRender =
+      prevSourceRef.current === undefined ||
+      prevSourceRef.current !== source ||
+      !shallowequal(katexOptions, prevKatexOptionsRef.current);
+
+    if (shouldRender) {
+      if (beforeRenderRef.current) {
+        beforeRenderRef.current();
+      }
+
+      katex.render(source, node, {
+        throwOnError: false,
+        ...katexOptions,
+      });
+
+      prevSourceRef.current = source;
+      prevKatexOptionsRef.current = katexOptions;
     }
+  });
 
-    katex.render(value, node, {
-      throwOnError: false,
-      ...this.props.katexOptions,
-    });
-  }
-
-  render() {
-    return <span ref={this.previewRef} />;
-  }
-}
+  return <span ref={previewRef} />;
+};
 
 export default Katex;

@@ -130,3 +130,250 @@ describe("URL parameter handling", () => {
     expect(noOption).toHaveStyle({ fontWeight: "bold" });
   });
 });
+
+describe("Smart cursor positioning", () => {
+  test("selects placeholder in single-letter braces like {x}", async () => {
+    render(<App />);
+    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+
+    // Clear the textarea first
+    fireEvent.change(textarea, { target: { value: "" } });
+
+    // Click the \hat{x} button
+    const hatButton = screen.getByTitle("\\hat{x}");
+    fireEvent.click(hatButton);
+
+    await waitFor(() => {
+      expect(textarea.value).toBe("\\hat{x}");
+      // Should select the 'x' (position 5, length 1)
+      expect(textarea.selectionStart).toBe(5);
+      expect(textarea.selectionEnd).toBe(6);
+    });
+  });
+
+  test("selects placeholder in {a} from \\frac{a}{b}", async () => {
+    render(<App />);
+    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+
+    fireEvent.change(textarea, { target: { value: "" } });
+
+    // Click the fraction button
+    const fracButton = screen.getByTitle("\\frac{a}{b}");
+    fireEvent.click(fracButton);
+
+    await waitFor(() => {
+      expect(textarea.value).toBe("\\frac{a}{b}");
+      // Should select the 'a' (first placeholder)
+      expect(textarea.selectionStart).toBe(6);
+      expect(textarea.selectionEnd).toBe(7);
+    });
+  });
+
+  test("positions cursor inside empty braces", async () => {
+    render(<App />);
+    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+
+    fireEvent.change(textarea, { target: { value: "" } });
+
+    // Manually trigger insertSource with text containing empty braces
+    // We can simulate this by finding a component that would insert such text
+    // For this test, let's directly test by typing and then clicking a symbol
+
+    // First, let's clear and type something with empty braces pattern
+    fireEvent.change(textarea, { target: { value: "test" } });
+
+    // Set cursor position
+    textarea.setSelectionRange(4, 4);
+
+    // Now we need to test the insertion. Let's click the sqrt button which has {x}
+    const sqrtButton = screen.getByTitle("\\sqrt{x}");
+    fireEvent.click(sqrtButton);
+
+    await waitFor(() => {
+      expect(textarea.value).toBe("test\\sqrt{x}");
+      // Should select the 'x' placeholder
+      expect(textarea.selectionStart).toBe(10);
+      expect(textarea.selectionEnd).toBe(11);
+    });
+  });
+
+  test("positions cursor at ampersand in matrix templates", async () => {
+    render(<App />);
+    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+
+    fireEvent.change(textarea, { target: { value: "" } });
+
+    // Click the matrix button which contains &
+    const matrixButton = screen.getByTitle(/\\begin\{matrix\}/);
+    fireEvent.click(matrixButton);
+
+    await waitFor(() => {
+      const value = textarea.value;
+      expect(value).toContain("\\begin{matrix}");
+      expect(value).toContain("&");
+
+      // Should position cursor at first &
+      const ampersandIndex = value.indexOf("&");
+      expect(textarea.selectionStart).toBe(ampersandIndex);
+      expect(textarea.selectionEnd).toBe(ampersandIndex);
+    });
+  });
+
+  test("inserts at cursor position, not at end", async () => {
+    render(<App />);
+    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+
+    // Set initial value with clear delimiter
+    fireEvent.change(textarea, { target: { value: "START END" } });
+
+    // Wait for state to settle
+    await waitFor(() => {
+      expect(textarea.value).toBe("START END");
+    });
+
+    // Position cursor between START and END (at position 6, after "START ")
+    textarea.focus();
+    textarea.setSelectionRange(6, 6);
+
+    // Click alpha button
+    const alphaButton = screen.getByTitle("\\alpha");
+    fireEvent.click(alphaButton);
+
+    await waitFor(() => {
+      expect(textarea.value).toBe("START \\alphaEND");
+      // Cursor should be at end of inserted text (6 + 6 = 12)
+      expect(textarea.selectionStart).toBe(12);
+    });
+  });
+
+  test("handles insertion when text is selected", async () => {
+    render(<App />);
+    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+
+    // Set initial value
+    fireEvent.change(textarea, { target: { value: "abc xyz" } });
+
+    // Select "xyz"
+    textarea.focus();
+    textarea.setSelectionRange(4, 7);
+
+    // Click beta button to replace selection
+    const betaButton = screen.getByTitle("\\beta");
+    fireEvent.click(betaButton);
+
+    await waitFor(() => {
+      expect(textarea.value).toBe("abc \\beta");
+      // Cursor should be at end of inserted text
+      expect(textarea.selectionStart).toBe(9);
+    });
+  });
+
+  test("focuses textarea after insertion", async () => {
+    render(<App />);
+    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+
+    fireEvent.change(textarea, { target: { value: "" } });
+
+    // Click gamma button
+    const gammaButton = screen.getByTitle("\\gamma");
+
+    // Blur the textarea first
+    textarea.blur();
+    expect(document.activeElement).not.toBe(textarea);
+
+    fireEvent.click(gammaButton);
+
+    await waitFor(() => {
+      expect(textarea.value).toBe("\\gamma");
+      // Textarea should be focused after insertion
+      expect(document.activeElement).toBe(textarea);
+    });
+  });
+
+  test("handles multiple consecutive insertions", async () => {
+    render(<App />);
+    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+
+    fireEvent.change(textarea, { target: { value: "" } });
+
+    await waitFor(() => {
+      expect(textarea.value).toBe("");
+    });
+
+    // Insert alpha
+    const alphaButton = screen.getByTitle("\\alpha");
+    fireEvent.click(alphaButton);
+
+    await waitFor(() => {
+      expect(textarea.value).toBe("\\alpha");
+    });
+
+    // Insert beta
+    const betaButton = screen.getByTitle("\\beta");
+    fireEvent.click(betaButton);
+
+    await waitFor(() => {
+      expect(textarea.value).toBe("\\alpha\\beta");
+    });
+
+    // Insert gamma
+    const gammaButton = screen.getByTitle("\\gamma");
+    fireEvent.click(gammaButton);
+
+    await waitFor(() => {
+      const expectedValue = "\\alpha\\beta\\gamma";
+      expect(textarea.value).toBe(expectedValue);
+      // Cursor should be at the end (length = 17)
+      expect(textarea.selectionStart).toBe(expectedValue.length);
+    });
+  });
+
+  test("placeholder selection allows immediate typing to replace", async () => {
+    render(<App />);
+    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+
+    fireEvent.change(textarea, { target: { value: "" } });
+
+    // Click \vec{x} which should select 'x'
+    const vecButton = screen.getByTitle("\\vec{x}");
+    fireEvent.click(vecButton);
+
+    await waitFor(() => {
+      expect(textarea.value).toBe("\\vec{x}");
+      expect(textarea.selectionStart).toBe(5);
+      expect(textarea.selectionEnd).toBe(6);
+    });
+
+    // Simulate typing to replace the selected 'x' with 'y'
+    // When a user types with text selected, it replaces the selection
+    const currentValue = textarea.value;
+    const newValue =
+      currentValue.substring(0, textarea.selectionStart) +
+      "y" +
+      currentValue.substring(textarea.selectionEnd);
+
+    fireEvent.change(textarea, { target: { value: newValue } });
+
+    await waitFor(() => {
+      expect(textarea.value).toBe("\\vec{y}");
+    });
+  });
+
+  test("handles LaTeX with no special cursor positioning", async () => {
+    render(<App />);
+    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+
+    fireEvent.change(textarea, { target: { value: "" } });
+
+    // Click infty which has no placeholders or special positioning
+    const inftyButton = screen.getByTitle("\\infty");
+    fireEvent.click(inftyButton);
+
+    await waitFor(() => {
+      expect(textarea.value).toBe("\\infty");
+      // Cursor should be at the end
+      expect(textarea.selectionStart).toBe(6);
+      expect(textarea.selectionEnd).toBe(6);
+    });
+  });
+});

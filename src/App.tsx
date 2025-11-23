@@ -80,7 +80,16 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
     insertedSource = insertedSource.trim();
     const { value } = this.state;
     const index = element.selectionStart;
-    const numOfChars = insertedSource.length;
+
+    // Smart cursor positioning inspired by mathURL
+    // Priority:
+    // 1. Find {x}, {a}, {b}, etc. and select the placeholder
+    // 2. Find {} empty braces and position inside
+    // 3. Find & for matrices/alignments
+    // 4. Find $$ for display math
+    // 5. Default to end of inserted text
+    let cursorOffset = this.calculateSmartCursorOffset(insertedSource);
+
     this.setState(
       {
         value:
@@ -94,9 +103,75 @@ class Sandbox extends React.Component<SandboxProps, SandboxState> {
           return;
         }
         element.focus();
-        element.setSelectionRange(index + numOfChars, index + numOfChars);
+
+        // If we found a placeholder to select, set selection range
+        // Otherwise just position cursor
+        if (cursorOffset.isSelection) {
+          element.setSelectionRange(
+            index + cursorOffset.start,
+            index + cursorOffset.end
+          );
+        } else {
+          element.setSelectionRange(
+            index + cursorOffset.start,
+            index + cursorOffset.start
+          );
+        }
       }
     );
+  };
+
+  calculateSmartCursorOffset = (
+    text: string
+  ): { start: number; end: number; isSelection: boolean } => {
+    // First, try to find a placeholder like {x}, {a}, {b}, etc.
+    // This is a single letter inside braces that we want to select
+    const placeholderMatch = text.match(/\{([a-zA-Z])\}/);
+    if (placeholderMatch && placeholderMatch.index !== undefined) {
+      const start = placeholderMatch.index + 1; // Position after '{'
+      return {
+        start,
+        end: start + placeholderMatch[1].length,
+        isSelection: true,
+      };
+    }
+
+    // Try to find empty braces {} and position cursor inside
+    const emptyBracesIndex = text.indexOf("{}");
+    if (emptyBracesIndex !== -1) {
+      return {
+        start: emptyBracesIndex + 1, // Position after '{'
+        end: emptyBracesIndex + 1,
+        isSelection: false,
+      };
+    }
+
+    // Try to find & (useful for matrices and alignments)
+    const ampersandIndex = text.indexOf("&");
+    if (ampersandIndex !== -1) {
+      return {
+        start: ampersandIndex,
+        end: ampersandIndex,
+        isSelection: false,
+      };
+    }
+
+    // Try to find $$ (display math delimiters)
+    const dollarIndex = text.indexOf("$$");
+    if (dollarIndex !== -1) {
+      return {
+        start: dollarIndex,
+        end: dollarIndex,
+        isSelection: false,
+      };
+    }
+
+    // Default: position at end of inserted text
+    return {
+      start: text.length,
+      end: text.length,
+      isSelection: false,
+    };
   };
 
   render() {

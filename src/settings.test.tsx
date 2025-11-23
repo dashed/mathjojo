@@ -1,17 +1,18 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { vi } from "vitest";
 import Settings from "./settings";
 
 describe("Settings", () => {
   const defaultProps = {
     displaySettings: false,
-    toggleSettings: jest.fn(),
+    toggleSettings: vi.fn(),
     displayMode: true,
-    setDisplayMode: jest.fn(),
+    setDisplayMode: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.clear();
     document.body.className = "";
   });

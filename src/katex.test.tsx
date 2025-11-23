@@ -1,16 +1,19 @@
 import React from "react";
 import { render } from "@testing-library/react";
+import { vi } from "vitest";
 import Katex from "./katex";
 import katex from "katex";
 
 // Mock katex
-jest.mock("katex", () => ({
-  render: jest.fn(),
+vi.mock("katex", () => ({
+  default: {
+    render: vi.fn(),
+  },
 }));
 
 describe("Katex", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("renders span element", () => {
@@ -92,7 +95,7 @@ describe("Katex", () => {
   });
 
   test("calls beforeRender callback if provided", () => {
-    const beforeRender = jest.fn();
+    const beforeRender = vi.fn();
 
     render(<Katex source="x^2" beforeRender={beforeRender} />);
 
@@ -102,11 +105,11 @@ describe("Katex", () => {
   test("calls beforeRender before katex.render", () => {
     const callOrder: string[] = [];
 
-    const beforeRender = jest.fn(() => {
+    const beforeRender = vi.fn(() => {
       callOrder.push("beforeRender");
     });
 
-    (katex.render as jest.Mock).mockImplementation(() => {
+    vi.mocked(katex.render).mockImplementation(() => {
       callOrder.push("katex.render");
     });
 

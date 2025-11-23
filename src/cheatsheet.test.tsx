@@ -1,34 +1,37 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { vi } from "vitest";
 import CheatSheet from "./cheatsheet";
 
 // Mock the QuickInsert component
-jest.mock("./quickinsert", () => {
-  return function QuickInsert(props: any) {
-    return (
-      <a
-        href="#insert"
-        onClick={(e) => {
-          e.preventDefault();
-          props.onClick();
-        }}
-        data-testid={`quick-insert-${props.source}`}
-      >
-        {props.source}
-      </a>
-    );
+vi.mock("./quickinsert", () => {
+  return {
+    default: function QuickInsert(props: any) {
+      return (
+        <a
+          href="#insert"
+          onClick={(e) => {
+            e.preventDefault();
+            props.onClick();
+          }}
+          data-testid={`quick-insert-${props.source}`}
+        >
+          {props.source}
+        </a>
+      );
+    },
   };
 });
 
 describe("CheatSheet", () => {
   const defaultProps = {
     displayCheatSheet: false,
-    insertSource: jest.fn(),
-    toggleCheatSheet: jest.fn(),
+    insertSource: vi.fn(),
+    toggleCheatSheet: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe("when cheatsheet is hidden", () => {

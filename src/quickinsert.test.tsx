@@ -1,19 +1,22 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { vi } from "vitest";
 import QuickInsert from "./quickinsert";
 
 // Mock the Katex component
-jest.mock("./katex", () => {
-  return function Katex(props: any) {
-    return <span data-testid="katex-mock">{props.source}</span>;
+vi.mock("./katex", () => {
+  return {
+    default: function Katex(props: any) {
+      return <span data-testid="katex-mock">{props.source}</span>;
+    },
   };
 });
 
 describe("QuickInsert", () => {
-  const mockOnClick = jest.fn();
+  const mockOnClick = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("renders a link", () => {
@@ -56,7 +59,7 @@ describe("QuickInsert", () => {
     const event = new MouseEvent("click", { bubbles: true, cancelable: true });
 
     Object.defineProperty(event, "preventDefault", {
-      value: jest.fn(),
+      value: vi.fn(),
       writable: true,
     });
 

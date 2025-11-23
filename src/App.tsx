@@ -198,10 +198,7 @@ const Sandbox: React.FC = () => {
     }
   }, [value, displayMode]);
 
-  const katexOptions = useMemo(
-    () => ({ displayMode }),
-    [displayMode]
-  );
+  const katexOptions = useMemo(() => ({ displayMode }), [displayMode]);
 
   return (
     <div>
@@ -234,7 +231,7 @@ const Sandbox: React.FC = () => {
       </p>
     </div>
   );
-}
+};
 
 const compressString = (string: string): string =>
   LZString.compressToBase64(string)

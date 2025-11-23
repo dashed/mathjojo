@@ -9,7 +9,11 @@ type KatexProps = {
   beforeRender?: () => void;
 };
 
-const Katex: React.FC<KatexProps> = ({ source, katexOptions, beforeRender }) => {
+const Katex: React.FC<KatexProps> = ({
+  source,
+  katexOptions,
+  beforeRender,
+}) => {
   const previewRef = useRef<HTMLSpanElement>(null);
   const prevSourceRef = useRef<string>();
   const prevKatexOptionsRef = useRef<KatexOptions | undefined>();

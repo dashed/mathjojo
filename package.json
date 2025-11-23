@@ -2,6 +2,7 @@
   "name": "mathjojo",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "katex": "^0.16.2",
     "latex.css": "^1.8.0",

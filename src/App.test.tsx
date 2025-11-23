@@ -122,7 +122,9 @@ describe("URL parameter handling", () => {
     // The "No" option for display mode should be bold (active)
     const displayModeOptions = screen.getAllByText(/^(Yes|No)$/);
     const noOption = displayModeOptions.find(
-      (el) => el.textContent === "No" && el.getAttribute("href") === "#disable-displaymode"
+      (el) =>
+        el.textContent === "No" &&
+        el.getAttribute("href") === "#disable-displaymode"
     );
 
     expect(noOption).toHaveStyle({ fontWeight: "bold" });

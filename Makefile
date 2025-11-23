@@ -18,48 +18,49 @@ help:
 
 # Install dependencies
 install:
-	yarn install --frozen-lockfile
+	pnpm install --frozen-lockfile
 
 # Start Vite development server
 dev:
-	yarn dev
+	pnpm dev
 
 # Alias for dev
 start: dev
 
 # Run tests with Vitest
 test:
-	yarn test --run
+	pnpm test --run
 
 # Run tests with Vitest UI
 test-ui:
-	yarn test:ui
+	pnpm test:ui
 
 # Run tests with coverage
 test-coverage:
-	yarn test:coverage --run
+	pnpm test:coverage --run
 
 # Build production bundle
 build:
-	yarn build
+	pnpm build
 
 # Preview production build
 preview:
-	yarn preview
+	pnpm preview
 
 # Check code formatting with Prettier
 lint:
-	yarn prettier --check "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}"
+	pnpm prettier --check "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}"
 
 # Fix code formatting with Prettier
 lint-fix:
-	yarn prettier --write "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}"
+	pnpm prettier --write "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}"
 
 # Clean build artifacts
 clean:
 	rm -rf build
 	rm -rf coverage
 	rm -rf node_modules
+	rm -f pnpm-lock.yaml
 
 # Run all CI checks
 ci: test-coverage build lint
